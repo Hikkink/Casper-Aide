@@ -231,6 +231,27 @@ public class Action
         MobGroup MG=new MobGroup(player.getCurMap().nextObjectId,player.getCurCell().getId(),grp);
         player.getCurMap().startFigthVersusDopeuls(player,MG);
         break;
+
+      case 3000: // Intercambio chapas por ogrinas
+        try {
+          String[] parts = args.split(",");
+          int chapaId = Integer.parseInt(parts[0]);  // 10275
+          int chapaQuantity = Integer.parseInt(parts[1]);  // 20
+          int ogrinasToGive = Integer.parseInt(parts[2]);  // 50
+
+          if(player.hasItemTemplate(chapaId, chapaQuantity)) {
+            player.removeByTemplateID(chapaId, chapaQuantity);
+            player.getAccount().setPoints(player.getAccount().getPoints() + ogrinasToGive);
+            SocketManager.GAME_SEND_Im_PACKET(player, "022;" + chapaQuantity + "~" + chapaId);
+            player.sendMessage("Has intercambiado " + chapaQuantity + " chapas por " + ogrinasToGive + " ogrinas.");
+          } else {
+            SocketManager.GAME_SEND_Im_PACKET(player, "14|43");
+          }
+        } catch(Exception e) {
+          e.printStackTrace();
+        }
+        break;
+
       case -5://Apprendre un sort
         try
         {

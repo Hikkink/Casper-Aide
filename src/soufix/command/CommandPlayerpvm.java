@@ -16,6 +16,7 @@ import soufix.main.Constant;
 import soufix.main.Main;
 import soufix.object.GameObject;
 import soufix.client.other.Ornements;
+import soufix.other.Titre;
 
 public class CommandPlayerpvm {
 	private static String canal;
@@ -679,7 +680,34 @@ public class CommandPlayerpvm {
 			perso.send("wl"+ornements.toString());
 			return true;
 		}}
-			if (msg.length() > 8 && msg.substring(1, 9).equalsIgnoreCase("boutique")) {
+		if (msg.length() > 6 && msg.substring(1, 7).equalsIgnoreCase("titres")) {
+			StringBuilder titres = new StringBuilder();
+			for (Titre t : World.Titre.values()) {  // Usar World.Titre directamente
+				// Verificar si el jugador posee este título
+				String allTitles = perso.getAllTitle();
+				boolean hasTitle = false;
+				if(allTitles != null && !allTitles.isEmpty()) {
+					String[] titlesList = allTitles.split(",");
+					for(String title : titlesList) {
+						if(title.equals(String.valueOf(t.ID))) {
+							hasTitle = true;
+							break;
+						}
+					}
+				}
+
+				if(hasTitle) {
+					if (titres.length() > 0) {
+						titres.append(";");
+					}
+					titres.append(t.ID + "," + t.Content + ",T");
+				}
+			}
+			perso.send("b5" + titres.toString());
+			return true;
+		}
+
+		if (msg.length() > 8 && msg.substring(1, 9).equalsIgnoreCase("boutique")) {
 				GameClient.leaveExchange(perso);
 				soufix.main.Boutique.open(perso);
 				return true;

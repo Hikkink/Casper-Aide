@@ -45,8 +45,8 @@ public class Config
 
     /** Textos del servidor */
     public String name = "Valhalla";
-    public String discord = "";
-    public String startMessage = "";
+    public String discord = "https://discord.gg/rsVXMq92";
+    public String startMessage = "Bienvenidos al servidor Valhalla PVP";
     public String colorMessage = "ff0000";
 
     /** Información del servidor */

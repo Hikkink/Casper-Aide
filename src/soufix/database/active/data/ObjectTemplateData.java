@@ -8,6 +8,7 @@ import soufix.main.Config;
 import soufix.main.Main;
 import soufix.main.Tokenshop;
 import soufix.object.ObjectTemplate;
+import soufix.main.TitulosShop;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -82,7 +83,8 @@ public class ObjectTemplateData extends AbstractDAO<ObjectTemplate>
 			if (s.length() == 0)continue;
 	        int iditem=(int)Integer.parseInt(s);
 	        Boutique.items.add(Main.world.getObjTemplate(iditem));
-	      }  
+	      }
+        TitulosShop.initPacket();
       }
     }
     catch(SQLException e)

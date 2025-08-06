@@ -936,8 +936,8 @@ public class World
     return factor;
   }
   public static soufix.other.Titre gettitre(final int id) {
-		return World.Titre.get(id);
-	}
+    return World.Titre.get(id);
+  }
   
   public static soufix.other.Succes get_Succes(final int id) {
 		return World.Succes.get(id);

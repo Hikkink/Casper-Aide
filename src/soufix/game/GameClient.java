@@ -488,6 +488,45 @@ public int chek;
                     Database.getStatics().getPlayerData().updateOrnements(player);
 
             break;
+
+			case 't': // buy/select titles
+				int titleId = Integer.parseInt(packet.substring(2));
+				if(titleId == 0) {
+					player.sendMessage("Acabas de desactivar tu Título");
+					player.set_title(0);
+					player.refresh();
+					break;
+				}
+				if(World.gettitre(titleId) == null) {
+					player.sendMessage("Ha ocurrido un error, por favor contacta a un miembro del personal.");
+					break;
+				}
+
+				// Verificar si el jugador ya posee este título
+				String allTitles = player.getAllTitle();
+				boolean hasTitleAlready = false;
+				if(allTitles != null && !allTitles.isEmpty()) {
+					String[] titlesList = allTitles.split(",");
+					for(String title : titlesList) {
+						if(title.equals(String.valueOf(titleId))) {
+							hasTitleAlready = true;
+							break;
+						}
+					}
+				}
+
+				if(hasTitleAlready) {
+					// Si ya lo tiene, solo activarlo
+					player.set_title(titleId);
+					player.sendMessage("Has activado el título: " + World.gettitre(titleId).Content);
+				} else {
+					player.sendMessage("No posees este título.");
+					break;
+				}
+
+				player.refresh();
+				Database.getStatics().getPlayerData().update(player);
+				break;
   	    case 'J':
   	    	dropCraft(packet);
   	    	break;
@@ -2513,6 +2552,11 @@ public void setTimeLastTaverne(long timeLastTaverne) {
 
     if(Config.getInstance().tradeAsBlocked||this.player.isDead()==1||checkExchangeAction==null||!(checkExchangeAction.getValue() instanceof Integer)||(checkExchangeAction.getType()!=ExchangeAction.TRADING_WITH_PLAYER&&checkExchangeAction.getType()!=ExchangeAction.CRAFTING_SECURE_WITH&&checkExchangeAction.getType()!=ExchangeAction.CRAFTING_SECURE_WITH))
       return;
+		  if (msg.length() > 7 && msg.substring(1, 8).equalsIgnoreCase("titres")) {
+			  GameClient.leaveExchange(perso);
+			  TitulosShop.open(perso);
+			  return true;
+		  }
 
     @SuppressWarnings("unchecked")
     ExchangeAction<Integer> exchangeAction=(ExchangeAction<Integer>)this.player.getExchangeAction();
@@ -2842,6 +2886,48 @@ public void setTimeLastTaverne(long timeLastTaverne) {
 	            object.getTxtStat().put(997,mount.getName());
 	          }
 	          if(this.player.addObjet(object,true))
+				  else if(player.titulosShop) { // Nueva flag similar a player.boutique
+				try {
+					int titleId = Integer.parseInt(infos[0]);
+					int quantity = Integer.parseInt(infos[1]);
+
+					if(quantity != 1) {
+						SocketManager.GAME_SEND_MESSAGE(player, "Solo puedes comprar un título a la vez.");
+						return;
+					}
+
+					Titre titre = World.gettitre(titleId);
+					if(titre == null) {
+						SocketManager.GAME_SEND_BUY_ERROR_PACKET(this);
+						return;
+					}
+
+					int cost = Config.prix_titre;
+					if(player.getKamas() < cost) {
+						SocketManager.GAME_SEND_MESSAGE(player, "No tienes suficientes kamas. Necesitas " + cost + " kamas.");
+						SocketManager.GAME_SEND_BUY_ERROR_PACKET(this);
+						return;
+					}
+
+					// Verificar si ya tiene el título
+					if(player.hasTitle(titleId)) {
+						SocketManager.GAME_SEND_MESSAGE(player, "Ya posees este título.");
+						return;
+					}
+
+					// Procesar compra
+					player.setKamas(player.getKamas() - cost);
+					player.addTitle(titleId); // Método que necesitas implementar
+
+					SocketManager.GAME_SEND_BUY_OK_PACKET(this);
+					SocketManager.GAME_SEND_STATS_PACKET(player);
+					SocketManager.GAME_SEND_MESSAGE(player, "Has comprado el título: " + titre.getName());
+
+				} catch(Exception e) {
+					SocketManager.GAME_SEND_BUY_ERROR_PACKET(this);
+				}
+				return;
+			}
 	            World.addGameObject(object,true);
 	          if(attachObject)
 	            object.attachToPlayer(this.player);
@@ -6021,7 +6107,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
         long calcul=System.currentTimeMillis()-Config.getInstance().startTime;
         if(calcul<600000)
         {
-          this.player.sendMessage("Vous devez attendre "+((600000-calcul)/60000)+" minute(s) avant d'attaquer ce percepteur.");
+          this.player.sendMessage("Debes esperar "+((600000-calcul)/60000)+" minute(s) avant d'attaquer ce percepteur.");
           return;
         }
         gameCollector(packet);
@@ -6033,11 +6119,11 @@ public void setTimeLastTaverne(long timeLastTaverne) {
         calcul=System.currentTimeMillis()-Config.getInstance().startTime;
         if(calcul<600000)
         {
-          this.player.sendMessage("Vous devez attendre "+((600000-calcul)/60000)+" minute (s) avant d'attaquer ce prisme.");
+          this.player.sendMessage("Debes esperar "+((600000-calcul)/60000)+" minute (s) avant d'attaquer ce prisme.");
           return;
         }
         if(this.player.getLevel() <= 99) {
-        player.sendMessage("Level 100 minimum.");
+        player.sendMessage("Level 100 minimo.");
          return;    
         }
         gamePrism(packet);
@@ -6231,7 +6317,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
     if(qp==null)
       quete.applyQuest(this.player); // S'il n'a pas la qué¿½te
     else
-      SocketManager.GAME_SEND_MESSAGE(this.player,"Vous avez déjé commencé cette quéte.");
+      SocketManager.GAME_SEND_MESSAGE(this.player,"Ya has comenzado esta misión.");
     //this.player.addNewQuest(Integer.parseInt(packet.substring(5)));
   }
 
@@ -6404,7 +6490,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
       {
         if(!Target.getGroupe().isPlayer())
         {
-          SocketManager.GAME_SEND_MESSAGE(this.player,"Vous ne pouvez pas defier des membres du personnel.");
+          SocketManager.GAME_SEND_MESSAGE(this.player,"No puedes desafiar a miembros del personal.");
           return;
         }
       }
@@ -6576,7 +6662,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
       String map_pvp = ";7423;952;";
       if(!map_pvp.contains(";"+this.player.getCurMap().getId()+";"))
       {
-   SocketManager.GAME_SEND_MESSAGE(this.player,"Map non autorisé PvP");
+   SocketManager.GAME_SEND_MESSAGE(this.player,"Mapa no autorizado para PvP");
       return;	  
       }
       }
@@ -6592,13 +6678,13 @@ public void setTimeLastTaverne(long timeLastTaverne) {
     	  return;
       if(Config.singleton.serverId == 6)
       if((Math.abs(target.getLevel() - this.player.getLevel())) >= 20){
-    	  SocketManager.GAME_SEND_MESSAGE(this.player,"vous devez agresser un personnage egal a votre niveau ou moins de 20 level");
+    	  SocketManager.GAME_SEND_MESSAGE(this.player,"Debes atacar a un personaje de tu mismo nivel o inferior a 20 level");
           
     return;	  
       }
       if(Config.singleton.HEROIC)
           if((Math.abs(target.getLevel() - this.player.getLevel())) >= 50){
-        	  SocketManager.GAME_SEND_MESSAGE(this.player,"vous devez agresser un personnage egal a votre niveau ou moins de 50 level");
+        	  SocketManager.GAME_SEND_MESSAGE(this.player,"Debes atacar a un personaje de tu mismo nivel o inferior a 50 level");
               
         return;	  
           }
@@ -6611,7 +6697,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
       {
         if((System.currentTimeMillis()-this.player.getAccount().restriction.aggros.get(target.getAccount().getCurrentIp()))<1000*25*60)
         {
-          SocketManager.GAME_SEND_MESSAGE(this.player,"Vous devez attendre "+((((1000*15*60-((System.currentTimeMillis()-this.player.getAccount().restriction.aggros.get(target.getAccount().getCurrentIp()))))/60)/1000))+" plus de minutes avant d'attaquer.");
+          SocketManager.GAME_SEND_MESSAGE(this.player,"Debes esperar "+((((1000*15*60-((System.currentTimeMillis()-this.player.getAccount().restriction.aggros.get(target.getAccount().getCurrentIp()))))/60)/1000))+" plus de minutes avant d'attaquer.");
           return;
         }
         else
@@ -6658,7 +6744,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
         return;
       if(target.getTime_add() > System.currentTimeMillis())
       {
-        this.player.sendMessage("Vous devez attendre "+((target.getTime_add()-System.currentTimeMillis())/60000)+" minute(s) avant d'attaquer ce percepteur.");
+        this.player.sendMessage("Debes esperar "+((target.getTime_add()-System.currentTimeMillis())/60000)+" minute(s) avant d'attaquer ce percepteur.");
         return;
       }
       if(this.player.getCurMap().getId()!=target.getMap())
@@ -7539,7 +7625,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
         String map_pvp = ";7423;952;";
         if(!map_pvp.contains(";"+this.player.getCurMap().getId()+";"))
         {
-     SocketManager.GAME_SEND_MESSAGE(this.player,"Map non autorisé PvP");
+     SocketManager.GAME_SEND_MESSAGE(this.player,"Mapa no autorizado para PvP");
         return;	  
         }
         }
@@ -8447,13 +8533,13 @@ public void setTimeLastTaverne(long timeLastTaverne) {
       GameObject object=World.getGameObject(id);
       if(!this.player.hasItemGuid(id)||object==null || object.getTemplate()==null)
       {
-      	this.player.sendMessage("Erreur Object move 1 merci de contacter un administrateur");
+      	this.player.sendMessage("Error: Objeto movido 1 Por favor, contacta a un administrador");
         return ;
       }
       if(this.player.getFight()!=null)
         if(this.player.getFight().getState()>Constant.FIGHT_STATE_ACTIVE)
         {
-          	this.player.sendMessage("Erreur Object move 2 merci de contacter un administrateur");
+          	this.player.sendMessage("Error: Objeto movido 2 Por favor, contacta a un administrador");
             return ;
           }
       /** Pet subscribe **/
@@ -8461,7 +8547,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
       {
         SocketManager.GAME_SEND_EXCHANGE_REQUEST_ERROR(this,'S');
         {
-          	this.player.sendMessage("Erreur Object move 3 merci de contacter un administrateur");
+          	this.player.sendMessage("Error: Objeto movido 3  Por favor, contacta a un administrador");
             return ;
           }
       }
@@ -8658,7 +8744,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
             return;
           }
           if (exObj.containtTxtStats(975)){
-        	  this.player.sendMessage("Erreur item mimibiote");
+        	  this.player.sendMessage("Erroe item mimibiote");
       		return;
       	}
           exObj.setObvijevanPos(object.getObvijevanPos()); // L'objet qui é¿½tait en place a maintenant un obvi
@@ -8866,14 +8952,14 @@ public void setTimeLastTaverne(long timeLastTaverne) {
             this.player.setGfxId((this.player.getSexe()==1) ? 8009 : 8006);
             SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(this.player.getCurMap(),this.player.getId());
             SocketManager.GAME_SEND_ADD_PLAYER_TO_MAP(this.player.getCurMap(),this.player);
-            SocketManager.GAME_SEND_MESSAGE(this.player,"Vous avez été transformé en mercenaire.");
+            SocketManager.GAME_SEND_MESSAGE(this.player,"Has sido transformado en mercenario");
           }
           else if(position==Constant.ITEM_POS_NO_EQUIPED)
           {
             this.player.setGfxId(this.player.getClasse()*10+this.player.getSexe());
             SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(this.player.getCurMap(),this.player.getId());
             SocketManager.GAME_SEND_ADD_PLAYER_TO_MAP(this.player.getCurMap(),this.player);
-            SocketManager.GAME_SEND_MESSAGE(this.player,"Tu n'es plus un mercenaire.");
+            SocketManager.GAME_SEND_MESSAGE(this.player,"Ya no eres un mercenario.");
           }
         }
         if(object.getTemplate().getId()!=2157&&this.player.isMorphMercenaire()&&position==Constant.ITEM_POS_COIFFE)
@@ -8881,7 +8967,7 @@ public void setTimeLastTaverne(long timeLastTaverne) {
           this.player.setGfxId(this.player.getClasse()*10+this.player.getSexe());
           SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(this.player.getCurMap(),this.player.getId());
           SocketManager.GAME_SEND_ADD_PLAYER_TO_MAP(this.player.getCurMap(),this.player);
-          SocketManager.GAME_SEND_MESSAGE(this.player,"Tu n'es plus un mercenaire.");
+          SocketManager.GAME_SEND_MESSAGE(this.player,"Ya no eres un mercenario.");
         }
 
        

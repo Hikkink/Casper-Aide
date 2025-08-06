@@ -54,32 +54,40 @@ public class AccountData extends AbstractDAO<Account>
   }
 
 
-  public void load()
-  {
-    Result result=null;
-    try
-    {
-      result=super.getData("SELECT * from accounts WHERE id_web != -1");
-      ResultSet RS=result.resultSet;
-      while(RS.next())
-      {
-        if(RS.getString("pseudo").isEmpty())
-          continue;
-        Account a=new Account(RS.getInt("guid"),RS.getString("account").toLowerCase(),RS.getString("pseudo"),RS.getString("reponse"),(RS.getInt("banned")==1),RS.getString("lastIP"),RS.getString("lastConnectionDate"),RS.getInt("points"),RS.getLong("subscribe"),RS.getLong("muteTime"),RS.getString("mutePseudo"),RS.getInt("vip"),RS.getInt("id_web"),RS.getLong("potion_dj"));
-        Main.world.addAccount(a);
-       // Main.world.ReassignAccountToChar(a);
-        //a.setLoad_ok(true);
-      }
+    public void load() {
+        Result result = null;
+        try {
+            result = super.getData("SELECT * from accounts WHERE id_web != -1");
+            ResultSet RS = result.resultSet;
+            while (RS.next()) {
+                if (RS.getString("pseudo").isEmpty())
+                    continue;
+                Account a = new Account(
+                        RS.getInt("guid"),
+                        RS.getString("account").toLowerCase(),
+                        RS.getString("pseudo"),
+                        RS.getString("reponse"),
+                        (RS.getInt("banned") == 1),
+                        RS.getString("lastIP"),
+                        RS.getString("lastConnectionDate"),
+                        RS.getInt("points"),
+                        RS.getLong("subscribe"),
+                        RS.getLong("muteTime"),
+                        RS.getString("mutePseudo"),
+                        RS.getInt("vip"),
+                        RS.getInt("id_web"),  // Este valor es crítico
+                        RS.getLong("potion_dj")
+                );
+                Main.world.addAccount(a);
+                // Usamos id_web para la vinculación
+                Main.world.ReassignAccountToChar(a.getId());
+            }
+        } catch (Exception e) {
+            super.sendError("AccountData load", e);
+        } finally {
+            close(result);
+        }
     }
-    catch(Exception e)
-    {
-      super.sendError("AccountData load",e);
-    } finally
-    {
-      close(result);
-    }
-  }
-
 
   @Override
   public boolean update(Account acc)

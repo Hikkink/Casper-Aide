@@ -5645,17 +5645,21 @@ public void Anti_bug () {
 
       /** Stalk **/
       if(this.getType() == Constant.FIGHT_TYPE_KOLI) {
-    	  for(Fighter fighter : winners)
-          {
-    		  if(fighter.getPersonnage() == null)
-    			  continue;
-    		  GameObject object=Main.world.getObjTemplate(10275).createNewItem(2,false);
-              if(fighter.getPersonnage().addObjet(object,true))
-                World.addGameObject(object,true);
-              kamas=new Pair<>(1000*2,1000*2);
-              fighter.getPersonnage().addKamas(100,true);
-              Main.world.kamas_total += 100;
-          }
+        for(Fighter fighter : winners) {
+          if(fighter.getPersonnage() == null)
+            continue;
+          GameObject object=Main.world.getObjTemplate(10275).createNewItem(2,false);
+          if(fighter.getPersonnage().addObjet(object,true))
+            World.addGameObject(object,true);
+          kamas=new Pair<>(1000*2,1000*2);
+          fighter.getPersonnage().addKamas(100,true);
+
+          // Debug message
+          fighter.getPersonnage().sendMessage("Otorgando 5 ogrinas por victoria en Koliseo");
+          fighter.getPersonnage().setPuntos(5);
+
+          Main.world.kamas_total += 100;
+        }
       }
       Player curPlayer=null;
       boolean stalk=false;

@@ -2320,7 +2320,7 @@ public void setTotal_reculte() {
        } 
        if(Config.singleton.serverId == 1) 
        {
-      this.sendMessage("Bienvenue sur <b>Casper Semi-Like</b>, il y a actuellement <b>"+(Main.world.getOnlinePlayers().size()+fake)+"</b> joueurs en ligne.");
+      this.sendMessage("Bienvenido a <b>Valhalla PVP</b>, ACTUALMENTE HAY <b>"+(Main.world.getOnlinePlayers().size()+fake)+"</b> joueurs en ligne.");
        }
        if(Config.singleton.serverId == 6) 
        {
@@ -2335,7 +2335,7 @@ public void setTotal_reculte() {
       this.sendMessage("Bienvenue sur <b>Zoldik</b>, il y a actuellement <b>"+(Main.world.getOnlinePlayers().size()+fake)+"</b> joueurs en ligne.");
        }
        if(Config.singleton.serverId != 6)
-       SocketManager.GAME_SEND_MESSAGE(this,"La relique du jour est <b>["+Main.relique_donjon+"]</b> pour <b>Antre du kralamour </b>.","257C38");
+       SocketManager.GAME_SEND_MESSAGE(this,"La reliquia del día <b>["+Main.relique_donjon+"]</b> para <b>Antro del kralamar </b>.","257C38");
        
     //this.verifEquiped();
     SocketManager.ENVIAR_Os_SETS_RAPIDOS(client);
